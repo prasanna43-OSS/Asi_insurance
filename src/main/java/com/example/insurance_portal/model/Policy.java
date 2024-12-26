@@ -1,14 +1,19 @@
 package com.example.insurance_portal.model;
 
-
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 @Entity
 public class Policy {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String policyNumber;
-    private String policyHolder;
-    private Double premiumAmount;
+
+    private String policyName;
+    private String policyType;
 
     // Getters and Setters
     public Long getId() {
@@ -19,27 +24,19 @@ public class Policy {
         this.id = id;
     }
 
-    public String getPolicyNumber() {
-        return policyNumber;
+    public String getPolicyName() {
+        return policyName;
     }
 
-    public void setPolicyNumber(String policyNumber) {
-        this.policyNumber = policyNumber;
+    public void setPolicyName(String policyName) {
+        this.policyName = policyName;
     }
 
-    public String getPolicyHolder() {
-        return policyHolder;
+    public String getPolicyType() {
+        return policyType;
     }
 
-    public void setPolicyHolder(String policyHolder) {
-        this.policyHolder = policyHolder;
-    }
-
-    public Double getPremiumAmount() {
-        return premiumAmount;
-    }
-
-    public void setPremiumAmount(Double premiumAmount) {
-        this.premiumAmount = premiumAmount;
+    public void setPolicyType(String policyType) {
+        this.policyType = policyType;
     }
 }

@@ -1,54 +1,42 @@
 pipeline {
-    agent any
-
+    agent any 
     environment {
-        DOCKER_IMAGE = "your-dockerhub-username/static-website"
-        DOCKER_TAG = "latest"
+        PATH = "/usr/bin:$PATH"
+        tag = "1.0"
+        dockerHubUser="prasanna4344"
+        containerName="insure-me"
+        httpPort="8081"
     }
-
     stages {
-        stage('Clone Repository') {
+        stage("code clone"){
             steps {
-                git 'https://github.com/your-username/your-repository.git'
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/prasanna43-OSS/Asi_insurance.git']])
             }
         }
-
-        stage('Build Docker Image') {
+        stage("Maven build"){
             steps {
-                script {
-                    sh 'docker build -t $DOCKER_IMAGE:$DOCKER_TAG .'
-                }
+                sh "mvn clean install -DskipTests"
             }
         }
-
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
-                        sh "docker push $DOCKER_IMAGE:$DOCKER_TAG"
-                    }
-                }
+        stage("Build Docker Image"){
+            steps{
+                sh "docker build -t ${dockerHubUser}/insure-me:${tag} ."
             }
         }
-
-        stage('Deploy to AWS') {
-            steps {
-                script {
-                    sh '''
-                        ssh -i /path/to/your/key.pem ec2-user@<EC2_INSTANCE_PUBLIC_IP> "docker pull $DOCKER_IMAGE:$DOCKER_TAG && docker run -d -p 80:80 $DOCKER_IMAGE:$DOCKER_TAG"
-                    '''
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Pipeline executed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed!'
-        }
-    }
+        stage("push image to dockerhub"){
+            steps{
+                withCredentials([usernamePassword(credentialsId: 'dockerHubAccount', passwordVariable: 'dockerPassword', usernameVariable: 'dockerUser')]) {
+                    sh "docker login -u $dockerUser -p $dockerPassword"
+                    sh "docker push $dockerUser/$containerName:$tag"
 }
+            }
+        }
+        stage("Docker container deployment"){
+            steps{
+                sh "docker rm $containerName -f"
+                sh "docker pull $dockerHubUser/$containerName:$tag"
+                sh "docker run -d --rm -p $httpPort:$httpPort --name $containerName $dockerHubUser/$containerName:$tag"
+                echo "Application started on port: ${httpPort} (http)"
+            }
+        }
+    }
